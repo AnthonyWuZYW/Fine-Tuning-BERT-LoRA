@@ -50,6 +50,7 @@ data_collator = DataCollatorWithPadding(tokenizer)
 
 # Set up training arguments
 training_args = TrainingArguments(
+    output_dir="./results",  # Correct directory path
     learning_rate=2e-5,
     per_device_train_batch_size=16,
     num_train_epochs=3,
