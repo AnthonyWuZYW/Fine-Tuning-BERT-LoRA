@@ -61,12 +61,21 @@ training_args = TrainingArguments(
 
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
+    
     # Convert logits to tensor if it's a NumPy array
     logits = torch.tensor(logits) if isinstance(logits, np.ndarray) else logits
     predictions = torch.argmax(logits, dim=-1).cpu().numpy()
     
     # If labels are already numpy array, no need to call .cpu()
     labels = labels if isinstance(labels, np.ndarray) else labels.cpu().numpy()
+    
+    # Debugging: Print shapes and types
+    print(f"Predictions type: {type(predictions)}, shape: {predictions.shape}")
+    print(f"Labels type: {type(labels)}, shape: {labels.shape}")
+    
+    # Ensure the lengths are consistent
+    if len(labels) != len(predictions):
+        raise ValueError(f"Mismatch between number of labels and predictions: {len(labels)} vs {len(predictions)}")
     
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
@@ -76,6 +85,7 @@ def compute_metrics(eval_pred):
         "matthews_correlation": matthews_corr,
         "accuracy": accuracy
     }
+
 
 # Custom Trainer to handle evaluation
 class MyTrainer(Trainer):
