@@ -50,8 +50,8 @@ training_args = TrainingArguments(
     per_device_train_batch_size=16,
     num_train_epochs=3,
     weight_decay=0.01,
-    logging_dir="./logs"
-    report_to="none", 
+    logging_dir="./logs",
+    report_to="none",
 )
 
 # Define evaluation metrics
