@@ -43,7 +43,7 @@ encoded_dataset.set_format(type="torch", columns=["input_ids", "attention_mask",
 
 # Split dataset into train and test sets
 train_dataset = encoded_dataset["train"]
-test_dataset = encoded_dataset["test"]
+test_dataset = encoded_dataset["validation"]
 
 # Data collator for dynamic padding
 data_collator = DataCollatorWithPadding(tokenizer)
@@ -69,7 +69,10 @@ def compute_metrics(eval_pred):
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
     accuracy = accuracy_score(labels, predictions)
-    return matthews_corr
+    return {
+        "matthews_correlation": matthews_corr,
+        "accuracy": accuracy
+    }
 
 # Set up trainer
 trainer = Trainer(
