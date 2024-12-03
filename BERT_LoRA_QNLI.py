@@ -8,39 +8,36 @@ from transformers import (
     TrainingArguments,
     Trainer,
 )
-from transformers.adapters import AdapterConfig
-
+from peft import LoraConfig, get_peft_model
 from sklearn.metrics import matthews_corrcoef, accuracy_score
 import numpy as np
 
-# Load the CoLA dataset from GLUE
-dataset = load_dataset("glue", "cola")
+# Load the QNLI dataset from GLUE
+dataset = load_dataset("glue", "qnli")
 
 # Load the pretrained BERT model and tokenizer
 model_name = "bert-base-uncased"
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-# Add and configure adapters
-adapter_name = "cola_adapter"
-adapter_config = AdapterConfig(
-    mh_adapter=True,
-    output_adapter=True,
-    reduction_factor=16,
-    non_linearity="relu",
+# Configure LoRA
+lora_config = LoraConfig(
+    r=16,  # Rank of the low-rank matrices
+    lora_alpha=32,  # Scaling factor
+    lora_dropout=0.1,  # Dropout
+    target_modules=["query", "key", "value"]  # Apply LoRA to specific Linear layers
 )
-model.add_adapter(adapter_name, config=adapter_config)
-model.train_adapter(adapter_name)
 
-# Enable adapter
-model.set_active_adapters(adapter_name)
+# Wrap the model with LoRA
+model = get_peft_model(model, lora_config)
 
-# Preprocessing function
 def preprocess_function(examples):
+    # In QNLI, we need to handle both "question" and "sentence" fields
     return tokenizer(
-        examples["sentence"], padding="max_length", truncation=True, max_length=128
+        examples["question"], examples["sentence"], padding="max_length", truncation=True, max_length=128
     )
 
+# Preprocess and encode the dataset
 encoded_dataset = dataset.map(preprocess_function, batched=True)
 encoded_dataset = encoded_dataset.rename_column("label", "labels")
 encoded_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
@@ -52,9 +49,9 @@ test_dataset = encoded_dataset["validation"]
 # Data collator for dynamic padding
 data_collator = DataCollatorWithPadding(tokenizer)
 
-# Training arguments
+# Set up training arguments
 training_args = TrainingArguments(
-    output_dir="./results",
+    output_dir="./results",  # Correct directory path
     learning_rate=2e-5,
     per_device_train_batch_size=16,
     num_train_epochs=3,
@@ -62,18 +59,16 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
-
 # Define evaluation metrics including MCC and accuracy
 def compute_metrics(eval_pred):
-    print("Computing metrics...") 
+    print("Computing metrics...")
     predictions, labels = eval_pred
-    # Compute MCC and accuracy
-    matthews_corr = matthews_corrcoef(labels, predictions)
+    # Compute accuracy
     accuracy = accuracy_score(labels, predictions)
     return {
-        "matthews_correlation": matthews_corr,
         "accuracy": accuracy
     }
+
 
 # Custom Trainer with proper metric calculation
 class MyTrainer(Trainer):
@@ -127,16 +122,15 @@ print("Evaluation results:", eval_results)
 # Train the model
 trainer.train()
 
-# Evaluate the model
+# Evaluate the model after training
 eval_results = trainer.evaluate()
 
 # Measure total time
 end_time = time.time()
 total_time = end_time - start_time
 
-print("Evaluation results:", eval_results)
-print(f"Total time taken: {total_time:.2f} seconds")
+print(f"Total time taken for training and evaluation: {total_time:.2f} seconds")
 
-# Save the adapter-enabled model and tokenizer
-model.save_adapter("./bert_cola_adapter", adapter_name)
-tokenizer.save_pretrained("./bert_cola_adapter")
+# Save the LoRA-adapted model
+model.save_pretrained("./lora_bert_qnli")
+tokenizer.save_pretrained("./lora_bert_qnli")
