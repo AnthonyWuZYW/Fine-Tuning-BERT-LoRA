@@ -59,16 +59,19 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
-# Define evaluation metrics including MCC and accuracy
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     # Convert logits to tensor if it's a NumPy array
     logits = torch.tensor(logits) if isinstance(logits, np.ndarray) else logits
     predictions = torch.argmax(logits, dim=-1).cpu().numpy()
-    labels = labels.cpu().numpy()
+    
+    # If labels are already numpy array, no need to call .cpu()
+    labels = labels if isinstance(labels, np.ndarray) else labels.cpu().numpy()
+    
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
     accuracy = accuracy_score(labels, predictions)
+    
     return {
         "matthews_correlation": matthews_corr,
         "accuracy": accuracy
