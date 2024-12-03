@@ -63,7 +63,6 @@ training_args = TrainingArguments(
 def compute_metrics(eval_pred):
     print("Computing metrics...") 
     predictions, labels = eval_pred
-    predictions = predictions.numpy()
     labels = labels.numpy()
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
@@ -118,6 +117,7 @@ trainer = MyTrainer(
 # Measure time for training
 start_time = time.time()
 
+# Evaluate the model before training
 eval_results = trainer.evaluate()
 
 # Train the model
