@@ -18,7 +18,7 @@ lora_config = LoraConfig(
     r=16,  # Rank of the low-rank matrices
     lora_alpha=32,  # Scaling factor
     lora_dropout=0.1,  # Dropout
-    target_modules=["attention"]  # Apply LoRA to attention layers
+    target_modules=["query", "key", "value"]  # Apply LoRA to specific Linear layers
 )
 
 # Wrap the model with LoRA
@@ -44,7 +44,7 @@ data_collator = DataCollatorWithPadding(tokenizer)
 # Define training arguments
 training_args = TrainingArguments(
     output_dir="./lora_bert_cola",
-    evaluation_strategy="epoch",
+    eval_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
     per_device_train_batch_size=16,
@@ -52,10 +52,10 @@ training_args = TrainingArguments(
     num_train_epochs=3,
     weight_decay=0.01,
     logging_dir="./logs",
-    logging_ste=500,
+    logging_steps=500,
     save_total_limit=2,
     load_best_model_at_end=True,
-    report_to="none",  # Set to "wandb" or "tensorboard" if using logging tools
+    report_to="none", 
 )
 
 # Define evaluation metrics
@@ -70,9 +70,9 @@ trainer = Trainer(
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=validation_dataset,
-    tokenizer=tokenizer,
     data_collator=data_collator,
     compute_metrics=compute_metrics,
+    processing_class="tokenizer", 
 )
 
 # Train the model
