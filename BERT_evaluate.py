@@ -51,6 +51,7 @@ training_args = TrainingArguments(
     num_train_epochs=3,
     weight_decay=0.01,
     logging_dir="./logs"
+    report_to="none", 
 )
 
 # Define evaluation metrics
