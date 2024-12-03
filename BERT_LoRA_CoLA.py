@@ -1,8 +1,15 @@
 import torch
+import time
 from datasets import load_dataset
-from transformers import AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding, TrainingArguments, Trainer
+from transformers import (
+    AutoModelForSequenceClassification,
+    AutoTokenizer,
+    DataCollatorWithPadding,
+    TrainingArguments,
+    Trainer,
+)
 from peft import LoraConfig, get_peft_model
-from sklearn.metrics import matthews_corrcoef
+from sklearn.metrics import matthews_corrcoef, accuracy_score
 
 # Load the CoLA dataset from GLUE
 dataset = load_dataset("glue", "cola")
@@ -34,9 +41,9 @@ encoded_dataset = dataset.map(preprocess_function, batched=True)
 encoded_dataset = encoded_dataset.rename_column("label", "labels")
 encoded_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
-# Split dataset into train and validation sets
+# Split dataset into train and test sets
 train_dataset = encoded_dataset["train"]
-validation_dataset = encoded_dataset["validation"]
+test_dataset = encoded_dataset["test"]
 
 # Data collator for dynamic padding
 data_collator = DataCollatorWithPadding(tokenizer)
@@ -54,28 +61,43 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
-# Define evaluation metrics
+# Define evaluation metrics including MCC and accuracy
 def compute_metrics(eval_pred):
     logits, labels = eval_pred
     predictions = torch.argmax(logits, dim=-1).cpu().numpy()
-    return {"matthews_correlation": matthews_corrcoef(labels, predictions)}
+    labels = labels.cpu().numpy()
+    # Compute MCC and accuracy
+    matthews_corr = matthews_corrcoef(labels, predictions)
+    accuracy = accuracy_score(labels, predictions)
+    return {
+        "matthews_correlation": matthews_corr,
+        "accuracy": accuracy
+    }
 
 # Set up trainer
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,  # Replace with your training dataset
-    eval_dataset=validation_dataset,    # Replace with your evaluation dataset
+    eval_dataset=test_dataset,    # Replace with your evaluation dataset
     compute_metrics=compute_metrics  # Define compute_metrics function
 )
 
+# Measure time for training
+start_time = time.time()
 
 # Train the model
 trainer.train()
 
 # Evaluate the model
 eval_results = trainer.evaluate()
+
+# Measure total time
+end_time = time.time()
+total_time = end_time - start_time
+
 print("Evaluation results:", eval_results)
+print(f"Total time taken: {total_time:.2f} seconds")
 
 # Save the LoRA-adapted model
 model.save_pretrained("./lora_bert_cola")
