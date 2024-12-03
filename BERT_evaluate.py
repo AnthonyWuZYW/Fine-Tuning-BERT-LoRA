@@ -41,21 +41,16 @@ validation_dataset = encoded_dataset["validation"]
 # Data collator for dynamic padding
 data_collator = DataCollatorWithPadding(tokenizer)
 
-# Define training arguments
+# Set up training arguments
 training_args = TrainingArguments(
-    output_dir="./lora_bert_cola",
-    eval_strategy="epoch",
+    output_dir="./results",  # Correct directory path
+    evaluation_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
     per_device_train_batch_size=16,
-    per_device_eval_batch_size=32,
     num_train_epochs=3,
     weight_decay=0.01,
-    logging_dir="./logs",
-    logging_steps=500,
-    save_total_limit=2,
-    load_best_model_at_end=True,
-    report_to="none", 
+    logging_dir="./logs"
 )
 
 # Define evaluation metrics
@@ -64,16 +59,15 @@ def compute_metrics(eval_pred):
     predictions = torch.argmax(logits, dim=-1).cpu().numpy()
     return {"matthews_correlation": matthews_corrcoef(labels, predictions)}
 
-# Initialize Trainer
+# Set up trainer
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=train_dataset,
-    eval_dataset=validation_dataset,
-    data_collator=data_collator,
-    compute_metrics=compute_metrics,
-    processing_class="tokenizer", 
+    train_dataset=train_dataset,  # Replace with your training dataset
+    eval_dataset=validation_dataset,    # Replace with your evaluation dataset
+    compute_metrics=compute_metrics  # Define compute_metrics function
 )
+
 
 # Train the model
 trainer.train()
