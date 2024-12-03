@@ -71,8 +71,23 @@ def compute_metrics(eval_pred):
         "accuracy": accuracy
     }
 
+# Custom Trainer with compute_metrics to ensure it is triggered
+class MyTrainer(Trainer):
+    def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
+        # Calling the original evaluate method
+        eval_results = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+        
+        # Manually calculate metrics
+        if self.compute_metrics is not None:
+            eval_pred = self.predictions  # Accessing predictions
+            metrics = self.compute_metrics(eval_pred)
+            eval_results.update(metrics)
+        
+        return eval_results
+
+
 # Set up trainer
-trainer = Trainer(
+trainer = MyTrainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,  # Replace with your training dataset
