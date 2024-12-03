@@ -72,16 +72,17 @@ def compute_metrics(eval_pred):
         "accuracy": accuracy
     }
 
-# Custom Trainer with compute_metrics to ensure it is triggered
+# Custom Trainer with proper metric calculation
 class MyTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
         # Calling the original evaluate method
         eval_results = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
         
-        # Manually calculate metrics
+        # Manually calculate metrics after getting logits and labels
         if self.compute_metrics is not None:
-            eval_pred = self.predictions  # Accessing predictions
-            metrics = self.compute_metrics(eval_pred)
+            logits = eval_results["predictions"]
+            labels = eval_results["label_ids"]
+            metrics = self.compute_metrics((logits, labels))
             eval_results.update(metrics)
         
         return eval_results
