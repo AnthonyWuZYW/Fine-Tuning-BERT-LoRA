@@ -61,8 +61,9 @@ training_args = TrainingArguments(
 
 # Define evaluation metrics including MCC and accuracy
 def compute_metrics(eval_pred):
-    print("Computing metrics...") 
     logits, labels = eval_pred
+    # Convert logits to tensor if it's a NumPy array
+    logits = torch.tensor(logits) if isinstance(logits, np.ndarray) else logits
     predictions = torch.argmax(logits, dim=-1).cpu().numpy()
     labels = labels.cpu().numpy()
     # Compute MCC and accuracy
@@ -73,11 +74,14 @@ def compute_metrics(eval_pred):
         "accuracy": accuracy
     }
 
-# Custom Trainer with proper metric calculation
+# Custom Trainer to handle evaluation
 class MyTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
-        # Calling the original evaluate method
+        # Perform evaluation
         eval_results = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+        
+        # Now we need to compute predictions manually
+        predictions, labels, metrics = None, None, None
         
         # Perform evaluation manually if necessary (e.g., to retrieve logits and labels)
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
