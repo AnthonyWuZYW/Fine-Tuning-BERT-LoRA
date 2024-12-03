@@ -132,6 +132,7 @@ eval_results = trainer.evaluate()
 end_time = time.time()
 total_time = end_time - start_time
 
+print("Evaluation results:", eval_results)
 print(f"Total time taken for training and evaluation: {total_time:.2f} seconds")
 
 # Save the LoRA-adapted model
