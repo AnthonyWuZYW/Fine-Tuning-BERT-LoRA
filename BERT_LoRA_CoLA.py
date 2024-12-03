@@ -118,6 +118,7 @@ start_time = time.time()
 
 # Evaluate the model before training
 eval_results = trainer.evaluate()
+print("Evaluation results:", eval_results)
 
 # Train the model
 trainer.train()
