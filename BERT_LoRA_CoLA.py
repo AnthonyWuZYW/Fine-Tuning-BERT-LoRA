@@ -69,10 +69,7 @@ def compute_metrics(eval_pred):
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
     accuracy = accuracy_score(labels, predictions)
-    return {
-        "matthews_correlation": matthews_corr,
-        "accuracy": accuracy
-    }
+    return matthews_corr
 
 # Set up trainer
 trainer = Trainer(
