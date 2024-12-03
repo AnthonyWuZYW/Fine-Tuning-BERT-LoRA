@@ -59,42 +59,25 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
+# Define evaluation metrics including MCC and accuracy
 def compute_metrics(eval_pred):
+    print("Computing metrics...") 
     logits, labels = eval_pred
-    
-    # Convert logits to tensor if it's a NumPy array
-    logits = torch.tensor(logits) if isinstance(logits, np.ndarray) else logits
     predictions = torch.argmax(logits, dim=-1).cpu().numpy()
-    
-    # If labels are already numpy array, no need to call .cpu()
-    labels = labels if isinstance(labels, np.ndarray) else labels.cpu().numpy()
-    
-    # Debugging: Print shapes and types
-    print(f"Predictions type: {type(predictions)}, shape: {predictions.shape}")
-    print(f"Labels type: {type(labels)}, shape: {labels.shape}")
-    
-    # Ensure the lengths are consistent
-    if len(labels) != len(predictions):
-        raise ValueError(f"Mismatch between number of labels and predictions: {len(labels)} vs {len(predictions)}")
-    
+    labels = labels.cpu().numpy()
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
     accuracy = accuracy_score(labels, predictions)
-    
     return {
         "matthews_correlation": matthews_corr,
         "accuracy": accuracy
     }
 
-
-# Custom Trainer to handle evaluation
+# Custom Trainer with proper metric calculation
 class MyTrainer(Trainer):
     def evaluate(self, eval_dataset=None, ignore_keys=None, metric_key_prefix="eval"):
-        # Perform evaluation
+        # Calling the original evaluate method
         eval_results = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
-        
-        # Now we need to compute predictions manually
-        predictions, labels, metrics = None, None, None
         
         # Perform evaluation manually if necessary (e.g., to retrieve logits and labels)
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
