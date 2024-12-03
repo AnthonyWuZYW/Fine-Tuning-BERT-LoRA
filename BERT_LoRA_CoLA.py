@@ -62,8 +62,9 @@ training_args = TrainingArguments(
 # Define evaluation metrics including MCC and accuracy
 def compute_metrics(eval_pred):
     print("Computing metrics...") 
+    print(eval_pred)
     logits, labels = eval_pred
-    predictions = torch.argmax(logits, dim=-1).cpu().numpy()
+    predictions = torch.argmax(logits, dim=-1).numpy()
     labels = labels.cpu().numpy()
     # Compute MCC and accuracy
     matthews_corr = matthews_corrcoef(labels, predictions)
