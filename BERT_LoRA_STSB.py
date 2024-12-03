@@ -61,9 +61,6 @@ encoded_dataset.set_format(type="torch", columns=["input_ids", "attention_mask",
 
 # Split dataset into train and test sets
 train_dataset = encoded_dataset["train"]
-# Reduce training set size to save time
-train_dataset = train_dataset.shuffle(seed=42).select(range(int(len(train_dataset) / 10)))
-
 test_dataset = encoded_dataset["validation"]
 
 # Data collator for dynamic padding
