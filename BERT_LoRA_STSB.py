@@ -59,9 +59,8 @@ training_args = TrainingArguments(
 
 # Define evaluation metrics (MSE, Pearson correlation, and Spearman correlation)
 def compute_metrics(eval_pred):
-    logits, labels = eval_pred
-    predictions = logits.squeeze(-1)  # Remove extra dimension for regression output
-
+    predictions, labels = eval_pred
+    
     # Compute Pearson Correlation, and Spearman Correlation
     pearson_corr, _ = pearsonr(labels, predictions)
     spearman_corr, _ = spearmanr(labels, predictions)
