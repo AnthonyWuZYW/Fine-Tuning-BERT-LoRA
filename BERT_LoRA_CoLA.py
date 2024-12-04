@@ -1,4 +1,3 @@
-import torch
 import time
 from datasets import load_dataset
 from transformers import (
@@ -9,7 +8,6 @@ from transformers import (
 )
 from peft import LoraConfig, get_peft_model
 from sklearn.metrics import matthews_corrcoef, accuracy_score
-import numpy as np
 from Trainer import MyTrainer
 
 # Load the CoLA dataset from GLUE
@@ -57,6 +55,7 @@ training_args = TrainingArguments(
     num_train_epochs=3,
     weight_decay=0.01,
     report_to="none",
+    eval_strategy="epoch",
 )
 
 # Define evaluation metrics including MCC and accuracy
