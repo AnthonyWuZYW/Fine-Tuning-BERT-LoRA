@@ -72,6 +72,3 @@ trainer = Trainer(
 # Evaluate the model before training (you can also use `trainer.train()` to start training)
 eval_results = trainer.evaluate()
 print("Evaluation results:", eval_results)
-
-# Uncomment below to start training
-# trainer.train()
