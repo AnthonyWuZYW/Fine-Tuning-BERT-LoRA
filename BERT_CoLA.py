@@ -27,7 +27,7 @@ encoded_dataset = dataset.map(preprocess_function, batched=True)
 encoded_dataset = encoded_dataset.rename_column("label", "labels")
 encoded_dataset.set_format(type="torch", columns=["input_ids", "attention_mask", "labels"])
 
-# Split dataset into train and validation sets (validation set is used as test set here)
+# Split dataset into train and validation sets 
 train_dataset = encoded_dataset["train"]
 test_dataset = encoded_dataset["validation"]
 
@@ -36,13 +36,13 @@ data_collator = DataCollatorWithPadding(tokenizer)
 
 # Set up training arguments
 training_args = TrainingArguments(
-    output_dir="./results",  # Correct directory path for results
+    output_dir="./results",  
     learning_rate=2e-5,
     per_device_train_batch_size=16,
     num_train_epochs=3,
     weight_decay=0.01,
-    report_to="none",  # Prevents logging to external services
-    evaluation_strategy="epoch",  # Evaluate after each epoch
+    report_to="none",  
+    eval_strategy="epoch",  
 )
 
 # Define evaluation metrics (MCC and accuracy)
@@ -51,7 +51,7 @@ def compute_metrics(eval_pred):
     logits, labels = eval_pred
     predictions = logits.argmax(axis=-1)  # Convert logits to predicted class labels (0 or 1)
     
-    # Ensure labels are in integer format (they may be returned as float32)
+    # Ensure labels are in integer format
     labels = labels.astype(int)
     
     # Compute Matthews Correlation Coefficient and Accuracy
@@ -67,13 +67,12 @@ def compute_metrics(eval_pred):
 trainer = Trainer(
     model=model,
     args=training_args,
-    train_dataset=train_dataset,  # Replace with your training dataset
-    eval_dataset=test_dataset,    # Replace with your evaluation dataset
-    data_collator=data_collator,  # Apply dynamic padding
-    compute_metrics=compute_metrics  # Define compute_metrics function
+    train_dataset=train_dataset, 
+    eval_dataset=test_dataset,    
+    data_collator=data_collator, 
+    compute_metrics=compute_metrics 
 )
 
 # Evaluate the model before training (you can also use `trainer.train()` to start training)
 eval_results = trainer.evaluate()
 print("Evaluation results:", eval_results)
-
