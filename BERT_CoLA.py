@@ -1,5 +1,3 @@
-import torch
-import time
 from datasets import load_dataset
 from transformers import (
     AutoModelForSequenceClassification,
@@ -7,9 +5,7 @@ from transformers import (
     DataCollatorWithPadding,
     TrainingArguments,
 )
-from peft import LoraConfig, get_peft_model
 from sklearn.metrics import matthews_corrcoef, accuracy_score
-import numpy as np
 from Trainer import MyTrainer
 
 # Load the CoLA dataset from GLUE
@@ -20,17 +16,6 @@ dataset = load_dataset("glue", "cola")
 model_name = "bert-base-uncased"
 model = AutoModelForSequenceClassification.from_pretrained(model_name, num_labels=2)
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-
-# Configure LoRA
-lora_config = LoraConfig(
-    r=16,  # Rank of the low-rank matrices
-    lora_alpha=32,  # Scaling factor
-    lora_dropout=0.1,  # Dropout
-    target_modules=["query", "key", "value"]  # Apply LoRA to specific Linear layers
-)
-
-# Wrap the model with LoRA
-model = get_peft_model(model, lora_config)
 
 
 def preprocess_function(examples):
@@ -71,6 +56,7 @@ def compute_metrics(eval_pred):
         "accuracy": accuracy
     }
 
+
 # Set up trainer
 trainer = MyTrainer(
     model=model,
@@ -80,27 +66,7 @@ trainer = MyTrainer(
     compute_metrics=compute_metrics  # Define compute_metrics function
 )
 
-# Measure time for training
-start_time = time.time()
-
 # Evaluate the model before training
 eval_results = trainer.evaluate()
 print("Evaluation results:", eval_results)
-
-# Train the model
-trainer.train()
-
-# Evaluate the model
-eval_results = trainer.evaluate()
-
-# Measure total time
-end_time = time.time()
-total_time = end_time - start_time
-
-print("Evaluation results:", eval_results)
-print(f"Total time taken: {total_time:.2f} seconds")
-
-# Save the LoRA-adapted model
-model.save_pretrained("./lora_bert_cola")
-tokenizer.save_pretrained("./lora_bert_cola")
 
