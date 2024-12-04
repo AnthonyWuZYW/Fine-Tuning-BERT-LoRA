@@ -59,17 +59,16 @@ training_args = TrainingArguments(
     report_to="none",
 )
 
-# Define evaluation metrics (MSE, Pearson correlation, and Spearman correlation)
+# Define evaluation metrics for regression
 def compute_metrics(eval_pred):
+    print("Computing metrics...")
     predictions, labels = eval_pred
-
-    # Compute Pearson Correlation, and Spearman Correlation
-    pearson_corr, _ = pearsonr(labels, predictions)
-    spearman_corr, _ = spearmanr(labels, predictions)
-
+    predictions = predictions.flatten()  # Ensure shape compatibility
+    pearson_corr = pearsonr(predictions, labels)[0]
+    spearman_corr = spearmanr(predictions, labels)[0]
     return {
-        "pearson_corr": pearson_corr,
-        "spearman_corr": spearman_corr
+        "pearson": pearson_corr,
+        "spearman": spearman_corr,
     }
 
 # Custom Trainer with proper metric calculation
